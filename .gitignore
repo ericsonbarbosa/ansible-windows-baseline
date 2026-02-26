@@ -1,0 +1,6 @@
+.vault_pass
+*.retry
+__pycache__/
+
+# Environments
+ansible-env/

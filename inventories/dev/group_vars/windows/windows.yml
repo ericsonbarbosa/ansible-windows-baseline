@@ -1,0 +1,5 @@
+ansible_connection: winrm
+ansible_user: Suporte
+ansible_password: "{{ vault_ansible_password }}"
+ansible_winrm_transport: ntlm
+ansible_winrm_server_cert_validation: ignore
