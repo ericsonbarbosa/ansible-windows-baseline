@@ -1,45 +1,50 @@
 ---
-- name: Verificar versão do Windows
-  win_shell: |
-    [System.Environment]::OSVersion.VersionString
-  register: windows_version
-  tags:
-    - common
-    - pre-check
+# ======================================================================
+# 1. VALIDAÇÕES DO SISTEMA (Pre-checks)
+# ======================================================================
 
-- name: Exibir informações do sistema
+- name: Exibir informações do sistema operacional
   debug:
-    msg: "Sistema operacional: {{ windows_version.stdout | trim }}"
-  tags:
-    - common
-    - pre-check
+    # Usando as variaveis nativas corretas do Windows
+    msg: "Sistema: {{ ansible_distribution }} (Versão: {{ ansible_distribution_version }})"
 
-- name: Verificar se PowerShell versão 5 ou superior está instalado
-  win_shell: "$PSVersionTable.PSVersion.Major"
-  register: powershell_version
-  tags:
-    - common
-    - pre-check
-
-- name: Validar PowerShell versão mínima
+- name: Validar se a versão do Windows é compatível
   assert:
     that:
-      - powershell_version.stdout | int >= 5
-    fail_msg: "PowerShell versão 5 ou superior é necessário"
-  tags:
-    - common
-    - pre-check
+      # O filtro "version" compara versões de forma inteligente (ex: entende que 10.0.2 é maior que 10.0)
+      - ansible_distribution_version is version(min_windows_version, '>=')
+    fail_msg: "FALHA: O Windows precisa ser versão {{ min_windows_version }} ou superior."
+    success_msg: "OK: Versão do Windows validada."
 
-- name: Verificar conectividade de rede
-  win_shell: "Test-NetConnection -ComputerName 8.8.8.8 -WarningAction SilentlyContinue | Select-Object -ExpandProperty PingSucceeded"
+- name: Validar se o PowerShell é compatível
+  assert:
+    that:
+      # Puxando a sua variável min_powershell_version da pasta vars!
+      - ansible_powershell_version >= min_powershell_version
+    fail_msg: "FALHA: PowerShell versão {{ min_powershell_version }} ou superior é necessário."
+    success_msg: "OK: PowerShell validado (v{{ ansible_powershell_version }})."
+
+- name: Verificar conectividade de rede (Saída para a Internet)
+  ansible.windows.win_shell: (Test-NetConnection -ComputerName 8.8.8.8 -WarningAction SilentlyContinue).PingSucceeded
   register: network_check
-  tags:
-    - common
-    - pre-check
+  changed_when: false
 
-- name: Exibir status de conectividade
-  debug:
-    msg: "Conectividade de rede: {{ 'OK' if network_check.stdout | trim | bool else 'FALHA' }}"
-  tags:
-    - common
-    - pre-check
+- name: Validar conectividade com a internet
+  assert:
+    that:
+      - network_check.stdout | trim == 'True'
+    fail_msg: "FALHA: A máquina não consegue pingar o 8.8.8.8."
+    success_msg: "OK: Acesso à internet confirmado."
+
+# ======================================================================
+# 2. CONFIGURAÇÕES BASE (Estado desejado)
+# ======================================================================
+
+- name: Garantir que a pasta temporaria padrao exista
+  ansible.windows.win_file:
+    path: C:\Temp
+    state: directory
+
+- name: Configurar o Fuso Horario para o padrao Brasileiro
+  community.windows.win_timezone:
+    timezone: E. South America Standard Time
