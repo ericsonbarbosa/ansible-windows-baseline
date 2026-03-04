@@ -29,6 +29,11 @@
         - chrome
         - install
 
+    - role: gcpw
+      tags:
+        - gcpw
+        - corporativo
+
   post_tasks:
     - name: Resumo da execução
       debug:

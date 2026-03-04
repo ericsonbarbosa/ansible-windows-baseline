@@ -1,5 +1,33 @@
 ---
 # ======================================================================
+# 0. CONFIGURAÇÃO DE NOME DA MÁQUINA (Hostname)
+# ======================================================================
+
+- name: Solicitar novo nome para a maquina (Apenas se nao seguir o padrao BRAPO)
+  ansible.builtin.pause:
+    prompt: "\n[ATENCAO] O nome atual e '{{ ansible_hostname }}'.\nDigite o novo nome do PC (ex: BRAPO1NT002) e pressione ENTER"
+  register: prompt_novo_nome
+  when: not ansible_hostname.startswith('BRAPO')
+
+- name: Renomear o computador no Windows
+  ansible.windows.win_hostname:
+    name: "{{ prompt_novo_nome.user_input | trim }}"
+  register: result_rename
+  when: 
+    - not ansible_hostname.startswith('BRAPO')
+    - prompt_novo_nome.user_input is defined
+    - prompt_novo_nome.user_input | trim != ''
+
+- name: Reiniciar o Windows para aplicar o novo nome imediatamente
+  ansible.windows.win_reboot:
+    msg: "O Ansible esta reiniciando o Windows para aplicar o novo nome antes de instalar o Antivirus."
+    pre_reboot_delay: 5      # Espera 5 segundos antes de mandar o comando
+    post_reboot_delay: 15    # Espera 15 segundos depois que o PC voltar para garantir que os serviços subiram
+    reboot_timeout: 600      # Espera no maximo 10 minutos pro PC voltar
+  # A MAGICA: Ele SÓ vai reiniciar se a tarefa de cima realmente alterou o nome!
+  when: result_rename.changed
+  
+# ======================================================================
 # 1. VALIDAÇÕES DO SISTEMA (Pre-checks)
 # ======================================================================
 

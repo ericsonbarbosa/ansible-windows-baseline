@@ -1,0 +1,27 @@
+---
+- name: Verificar se o GCPW ja esta instalado no Windows
+  ansible.windows.win_stat:
+    path: 'C:\Program Files\Google\Credential Provider'
+  register: gcpw_instalado
+
+# O recurso "block" agrupa várias tarefas. 
+# O "when" diz: "Se a pasta do GCPW NAO existir, rode tudo que esta aqui dentro."
+- name: Bloco de Instalacao Limpa do GCPW
+  when: not gcpw_instalado.stat.exists
+  block:
+    - name: Copiar o instalador do GCPW para o Windows
+      ansible.windows.win_copy:
+        src: gcpwstandaloneenterprise64.exe
+        dest: C:\Temp\gcpwstandaloneenterprise64.exe
+
+    - name: Instalar Google Credential Provider for Windows (GCPW)
+      ansible.windows.win_package:
+        path: C:\Temp\gcpwstandaloneenterprise64.exe
+        state: present
+        arguments: /silent /quiet
+        creates_path: 'C:\Program Files\Google\CredentialProvider'
+
+    - name: Limpar o instalador da pasta Temp (Boas praticas)
+      ansible.windows.win_file:
+        path: C:\Temp\gcpwstandaloneenterprise64.exe
+        state: absent
