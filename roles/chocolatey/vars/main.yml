@@ -1,0 +1,4 @@
+---
+# Configurações do Chocolatey
+chocolatey_install_url: "https://community.chocolatey.org/install.ps1"
+chocolatey_execution_policy: "Bypass"

@@ -1,0 +1,32 @@
+---
+- name: Verificar se o Chrome já está instalado
+  win_shell: "choco list googlechrome | Select-String -Pattern '^googlechrome'"
+  register: chrome_check
+  failed_when: false
+  changed_when: false
+  tags:
+    - chrome
+    - install
+
+- name: Instalar Google Chrome via Chocolatey
+  win_chocolatey:
+    name: googlechrome
+    state: present
+  when: chrome_check.stdout == ''
+  tags:
+    - chrome
+    - install
+
+- name: Verificar instalação do Google Chrome
+  win_shell: "choco list googlechrome | Select-String -Pattern '^GoogleChrome'"
+  register: chrome_installed
+  tags:
+    - chrome
+    - verify
+
+- name: Exibir versão do Google Chrome
+  debug:
+    msg: "{{ chrome_installed.stdout | trim }}"
+  tags:
+    - chrome
+    - verify

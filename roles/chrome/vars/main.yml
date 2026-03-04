@@ -1,0 +1,3 @@
+---
+# Variáveis específicas do role chrome
+chrome_package_name: googlechrome

@@ -1,15 +1,44 @@
 ---
 - name: Baseline Windows 11 - Instalacao de Softwares
   hosts: windows
-  gather_facts: no
+  gather_facts: yes
 
-  tasks:
-    - name: Garantir que o Chocolatey esteja instalado
-      chocolatey.chocolatey.win_chocolatey:
-        name: chocolatey
-        state: present
+  vars:
+    execution_timestamp: "{{ ansible_date_time.iso8601 }}"
 
-    - name: Garantir que o Google Chrome esteja instalado
-      chocolatey.chocolatey.win_chocolatey:
-        name: googlechrome
-        state: present
+  pre_tasks:
+    - name: Iniciar playbook
+      debug:
+        msg: "Iniciando Baseline Windows 11 em {{ execution_timestamp }}"
+      tags:
+        - always
+
+  roles:
+    - role: common
+      tags:
+        - common
+        - pre-check
+      
+    - role: chocolatey
+      tags:
+        - chocolatey
+        - setup
+      
+    - role: chrome
+      tags:
+        - chrome
+        - install
+
+  post_tasks:
+    - name: Resumo da execução
+      debug:
+        msg: |
+          ========================================
+          Baseline Windows 11 - CONCLUÍDO
+          ========================================
+          Host: {{ inventory_hostname }}
+          Data/Hora: {{ execution_timestamp }}
+          Status: SUCESSO
+          ========================================
+      tags:
+        - always

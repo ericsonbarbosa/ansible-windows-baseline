@@ -1,0 +1,45 @@
+---
+- name: Verificar versão do Windows
+  win_shell: |
+    [System.Environment]::OSVersion.VersionString
+  register: windows_version
+  tags:
+    - common
+    - pre-check
+
+- name: Exibir informações do sistema
+  debug:
+    msg: "Sistema operacional: {{ windows_version.stdout | trim }}"
+  tags:
+    - common
+    - pre-check
+
+- name: Verificar se PowerShell versão 5 ou superior está instalado
+  win_shell: "$PSVersionTable.PSVersion.Major"
+  register: powershell_version
+  tags:
+    - common
+    - pre-check
+
+- name: Validar PowerShell versão mínima
+  assert:
+    that:
+      - powershell_version.stdout | int >= 5
+    fail_msg: "PowerShell versão 5 ou superior é necessário"
+  tags:
+    - common
+    - pre-check
+
+- name: Verificar conectividade de rede
+  win_shell: "Test-NetConnection -ComputerName 8.8.8.8 -WarningAction SilentlyContinue | Select-Object -ExpandProperty PingSucceeded"
+  register: network_check
+  tags:
+    - common
+    - pre-check
+
+- name: Exibir status de conectividade
+  debug:
+    msg: "Conectividade de rede: {{ 'OK' if network_check.stdout | trim | bool else 'FALHA' }}"
+  tags:
+    - common
+    - pre-check

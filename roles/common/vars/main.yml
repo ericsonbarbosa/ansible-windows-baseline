@@ -1,0 +1,4 @@
+---
+# Variáveis comuns para pré-requisitos
+min_powershell_version: 5
+min_windows_version: "10.0"

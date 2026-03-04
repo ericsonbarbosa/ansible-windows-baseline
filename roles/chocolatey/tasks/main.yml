@@ -1,0 +1,38 @@
+---
+- name: Verificar se Chocolatey já está instalado
+  win_shell: "choco --version"
+  register: choco_installed
+  ignore_errors: yes
+  tags:
+    - chocolatey
+    - install
+
+- name: Instalar Chocolatey via PowerShell
+  win_shell: |
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+  when: choco_installed.rc != 0
+  tags:
+    - chocolatey
+    - install
+
+- name: Verificar instalação do Chocolatey
+  win_shell: "choco --version"
+  register: choco_version
+  tags:
+    - chocolatey
+    - verify
+
+- name: Exibir versão do Chocolatey
+  debug:
+    msg: "Chocolatey instalado: {{ choco_version.stdout | trim }}"
+  tags:
+    - chocolatey
+    - verify
+
+- name: Atualizar Chocolatey
+  win_shell: "choco upgrade chocolatey -y"
+  tags:
+    - chocolatey
+    - upgrade
