@@ -33,6 +33,12 @@
       tags:
         - gcpw
         - corporativo
+    
+    - role: bitdefender
+      tags:
+        - bitdefender
+        - antivirus
+        - security
 
   post_tasks:
     - name: Resumo da execução

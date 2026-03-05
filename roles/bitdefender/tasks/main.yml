@@ -1,0 +1,31 @@
+---
+- name: Verificar se o Bitdefender Endpoint Security ja esta instalado
+  ansible.windows.win_stat:
+    path: 'C:\Program Files\Bitdefender\Endpoint Security'
+  register: bitdefender_instalado
+
+- name: Bloco de Instalacao Limpa do Bitdefender
+  when: not bitdefender_instalado.stat.exists
+  block:
+    - name: Copiar os arquivos de instalacao do Bitdefender para o Windows
+      ansible.windows.win_copy:
+        src: "{{ item }}"
+        dest: "C:\\Temp\\{{ item }}"
+      loop:
+        - epskit_x64.exe
+        - installer.xml
+
+    - name: Executar a instalacao silenciosa do Antivirus
+      ansible.windows.win_package:
+        path: C:\Temp\epskit_x64.exe
+        state: present
+        arguments: /silent
+        creates_path: 'C:\Program Files\Bitdefender\Endpoint Security'
+
+    - name: Limpar os arquivos da pasta Temp
+      ansible.windows.win_file:
+        path: "C:\\Temp\\{{ item }}"
+        state: absent
+      loop:
+        - epskit_x64.exe
+        - installer.xml
