@@ -11,6 +11,7 @@
   block:
     - name: Copiar o instalador do GCPW para o Windows
       ansible.windows.win_copy:
+        # O arquivo gcpwstandaloneenterprise64.exe deve ser colocado na pasta files/gcpw para que o Ansible possa copiá-lo para o host Windows.
         src: gcpwstandaloneenterprise64.exe
         dest: C:\Temp\gcpwstandaloneenterprise64.exe
 

@@ -1,0 +1,9 @@
+---
+- name: Instalacao do TOTVS RM Cliente
+  hosts: all  # Ou o grupo de maquinas especifico que voce usa
+  gather_facts: yes
+  
+  roles:
+    - role: totvs
+      tags:
+        - totvs

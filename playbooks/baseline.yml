@@ -22,23 +22,22 @@
     - role: chocolatey
       tags:
         - chocolatey
-        - setup
       
     - role: chrome
       tags:
         - chrome
-        - install
 
     - role: gcpw
       tags:
         - gcpw
-        - corporativo
     
     - role: bitdefender
       tags:
         - bitdefender
-        - antivirus
-        - security
+    
+    - role: glpi_agent
+      tags:
+        - glpi
 
   post_tasks:
     - name: Resumo da execução

@@ -4,6 +4,7 @@
     path: 'C:\Program Files\Bitdefender\Endpoint Security'
   register: bitdefender_instalado
 
+# O recurso "block" agrupa várias tarefas. 
 - name: Bloco de Instalacao Limpa do Bitdefender
   when: not bitdefender_instalado.stat.exists
   block:
@@ -11,6 +12,7 @@
       ansible.windows.win_copy:
         src: "{{ item }}"
         dest: "C:\\Temp\\{{ item }}"
+      # O loop aqui é para copiar ambos os arquivos necessários para a instalação: o executável e o arquivo XML de configuração. Necessário criar pasta files/bitdefender e colocar os arquivos lá para que o Ansible possa copiá-los para o host Windows.
       loop:
         - epskit_x64.exe
         - installer.xml

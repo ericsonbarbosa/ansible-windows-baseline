@@ -1,0 +1,40 @@
+---
+- name: Verificar se o TOTVS RM ja esta instalado
+  ansible.windows.win_stat:
+    path: 'C:\TOTVS\TCLOUD\RM.exe'
+  register: totvs_instalado
+
+- name: Bloco de Instalacao Direta do TOTVS (Metodo ZIP)
+  when: not totvs_instalado.stat.exists
+  block:
+    - name: Garantir que a pasta C:\TOTVS\TCLOUD existe
+      ansible.windows.win_file:
+        path: C:\TOTVS\TCLOUD
+        state: directory
+
+    # Observacao: O arquivo totvs_tcloud.zip deve estar presente na pasta totvs/files do seu projeto Ansible para que o win_copy funcione corretamente.
+    - name: Copiar o arquivo ZIP do TOTVS para o Windows
+      ansible.windows.win_copy:
+        src: totvs_tcloud.zip
+        dest: C:\Temp\totvs_tcloud.zip
+
+    - name: Descompactar os arquivos do TOTVS direto na pasta
+      community.windows.win_unzip:
+        src: C:\Temp\totvs_tcloud.zip
+        dest: C:\TOTVS\TCLOUD
+        creates: C:\TOTVS\TCLOUD\RM.exe
+
+    - name: Limpar o arquivo ZIP da pasta Temp
+      ansible.windows.win_file:
+        path: C:\Temp\totvs_tcloud.zip
+        state: absent
+
+- name: Criar atalho na Area de Trabalho para TODOS os usuarios (Public Desktop)
+  ansible.windows.win_shell: |
+    $WshShell = New-Object -comObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut("C:\Users\Public\Desktop\TOTVS RM.lnk")
+    $Shortcut.TargetPath = "C:\TOTVS\TCLOUD\RM.exe"
+    $Shortcut.WorkingDirectory = "C:\TOTVS\TCLOUD"
+    $Shortcut.Save()
+  args:
+    creates: 'C:\Users\Public\Desktop\TOTVS RM.lnk'

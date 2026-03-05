@@ -1,0 +1,57 @@
+---
+- name: Verificar se o GLPI Agent ja esta instalado
+  ansible.windows.win_stat:
+    path: 'C:\Program Files\GLPI-Agent'
+  register: glpi_instalado
+
+- name: Bloco de Instalacao Limpa do GLPI Agent
+  when: not glpi_instalado.stat.exists
+  vars:
+    # ATENCAO: Altere para o nome exato do arquivo MSI que voce tem na pasta files
+    # Necessário criar pasta files/glpi_agent e colocar o arquivo lá para que o Ansible possa copiá-lo para o host Windows.
+    glpi_file: "GLPI-Agent-1.7.1-x64.msi" 
+  block:
+    - name: Copiar o instalador do GLPI para o Windows
+      ansible.windows.win_copy:
+        src: "{{ glpi_file }}"
+        dest: "C:\\Temp\\{{ glpi_file }}"
+
+    - name: Instalar GLPI Agent com parametros customizados
+      ansible.windows.win_package:
+        path: "C:\\Temp\\{{ glpi_file }}"
+        state: present
+        # O sinal ">-" permite quebrar a linha no YAML para ficar mais facil de ler
+        arguments: >-
+          /quiet /norestart
+          SERVER="https://chamados.colegioapoio.net"
+          TAG="Apoio"
+          RUNNOW=1
+          ADD_FIREWALL_EXCEPTION=1
+        creates_path: 'C:\Program Files\GLPI-Agent'
+
+    - name: Limpar o instalador da pasta Temp
+      ansible.windows.win_file:
+        path: "C:\\Temp\\{{ glpi_file }}"
+        state: absent
+
+# ======================================================================
+# FORÇAR INVENTÁRIO IMEDIATO
+# ======================================================================
+
+- name: Garantir que o servico do GLPI Agent esta rodando
+  ansible.windows.win_service:
+    name: glpi-agent
+    state: started
+
+- name: Aguardar o agente abrir a porta de comunicacao (62354)
+  ansible.windows.win_wait_for:
+    port: 62354
+    delay: 5        # Espera 5 segundos antes de comecar a testar
+    timeout: 60     # Desiste se demorar mais de 1 minuto
+  ignore_errors: yes
+
+- name: Forcar envio imediato do inventario (Simula o clique no painel local)
+  ansible.windows.win_uri:
+    url: http://127.0.0.1:62354/now
+    method: GET
+  ignore_errors: yes
