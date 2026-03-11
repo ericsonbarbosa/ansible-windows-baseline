@@ -12,7 +12,7 @@
   win_chocolatey:
     name: googlechrome
     state: present
-  when: chrome_check.stdout == ''
+    ignore_checksums: yes
   tags:
     - chrome
     - install

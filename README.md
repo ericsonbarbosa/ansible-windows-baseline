@@ -42,11 +42,17 @@ Para que o servidor Linux (Ansible) consiga controlar a estação Windows remota
 Abra o **PowerShell como Administrador** na máquina Windows alvo e rode estes dois comandos mágicos oficiais do Ansible:
 
 ```powershell
-# 1. Baixa o script oficial de preparação do WinRM para o Ansible
-Invoke-WebRequest -Uri [https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1](https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1) -OutFile ConfigureRemotingForAnsible.ps1
+# 1. Define a variável URL para baixa o script oficial do Ansible
+$url = "https://raw.githubusercontent.com/ansible/ansible-documentation/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
 
-# 2. Executa o script ativando a comunicação remota
-powershell -ExecutionPolicy RemoteSigned .\ConfigureRemotingForAnsible.ps1
+# 2. Define a variável FILE que indica onde o download será salvo
+$file = "$env:temp\ConfigureRemotingForAnsible.ps1"
+
+# 3. Executa o comando de download através das variáveis criadas anteriormente
+(New-Object -TypeName System.Net.WebClient).DownloadFile($url, $file)
+
+# 4. Executa o script
+powershell.exe -ExecutionPolicy ByPass -File $file
 ```
 
 ---

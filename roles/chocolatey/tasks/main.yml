@@ -1,38 +1,28 @@
 ---
-- name: Verificar se Chocolatey já está instalado
-  win_shell: "choco --version"
-  register: choco_installed
-  ignore_errors: yes
-  tags:
-    - chocolatey
-    - install
+- name: Verificar se Chocolatey ja esta instalado
+  ansible.windows.win_stat:
+    path: C:\ProgramData\chocolatey\bin\choco.exe
+  register: choco_instalado
 
-- name: Instalar Chocolatey via PowerShell
-  win_shell: |
-    Set-ExecutionPolicy Bypass -Scope Process -Force
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-  when: choco_installed.rc != 0
-  tags:
-    - chocolatey
-    - install
+- name: Bloco de Instalacao do Chocolatey
+  when: not choco_instalado.stat.exists
+  block:
+    - name: Garantir que a pasta C:\Temp existe
+      ansible.windows.win_file:
+        path: C:\Temp
+        state: directory
 
-- name: Verificar instalação do Chocolatey
-  win_shell: "choco --version"
-  register: choco_version
-  tags:
-    - chocolatey
-    - verify
+    - name: Baixar script oficial do Chocolatey para o disco
+      ansible.windows.win_get_url:
+        url: https://community.chocolatey.org/install.ps1
+        dest: C:\Temp\install_choco.ps1
 
-- name: Exibir versão do Chocolatey
-  debug:
-    msg: "Chocolatey instalado: {{ choco_version.stdout | trim }}"
-  tags:
-    - chocolatey
-    - verify
+    - name: Executar script de instalacao localmente
+      ansible.windows.win_shell: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        & C:\Temp\install_choco.ps1
 
-- name: Atualizar Chocolatey
-  win_shell: "choco upgrade chocolatey -y"
-  tags:
-    - chocolatey
-    - upgrade
+    - name: Limpar o script da pasta Temp
+      ansible.windows.win_file:
+        path: C:\Temp\install_choco.ps1
+        state: absent

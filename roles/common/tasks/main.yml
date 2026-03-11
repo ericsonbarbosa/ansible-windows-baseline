@@ -1,6 +1,24 @@
 ---
 # ======================================================================
-# 0. CONFIGURAÇÃO DE NOME DA MÁQUINA (Hostname)
+# 1. CONFIGURAÇÃO DE CONFIGURAÇÃO DE ENERGIA (EVITAR TIMEOUT)
+# ======================================================================
+- name: Bloco de Configuracao de Energia (Evitar Timeout)
+  block:
+    - name: Desativar suspensao (Sleep) quando conectado na tomada (AC)
+      ansible.windows.win_command: powercfg /change standby-timeout-ac 0
+      changed_when: false # Mantém o log limpo (verde), pois forçaremos isso sempre
+
+    - name: Desativar hibernacao quando conectado na tomada (AC)
+      ansible.windows.win_command: powercfg /change hibernate-timeout-ac 0
+      changed_when: false
+      ignore_errors: yes # Ignora caso a máquina não suporte hibernação nativamente
+
+    - name: Desativar desligamento do disco rigido quando conectado (AC)
+      ansible.windows.win_command: powercfg /change disk-timeout-ac 0
+      changed_when: false
+
+# ======================================================================
+# 2. CONFIGURAÇÃO DE NOME DA MÁQUINA (Hostname)
 # ======================================================================
 
 - name: Solicitar novo nome para a maquina (Apenas se nao seguir o padrao BRAPO)
@@ -28,7 +46,7 @@
   when: result_rename.changed
   
 # ======================================================================
-# 1. VALIDAÇÕES DO SISTEMA (Pre-checks)
+# 3. VALIDAÇÕES DO SISTEMA (Pre-checks)
 # ======================================================================
 
 - name: Exibir informações do sistema operacional
@@ -65,7 +83,7 @@
     success_msg: "OK: Acesso à internet confirmado."
 
 # ======================================================================
-# 2. CONFIGURAÇÕES BASE (Estado desejado)
+# 4. CONFIGURAÇÕES BASE (Estado desejado)
 # ======================================================================
 
 - name: Garantir que a pasta temporaria padrao exista
