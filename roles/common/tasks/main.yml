@@ -1,21 +1,23 @@
 ---
 # ======================================================================
-# 1. CONFIGURAÇÃO DE CONFIGURAÇÃO DE ENERGIA (EVITAR TIMEOUT)
+# 1. EVITAR PERDA DE CONEXAO WINRM DURANTE AUTOMACAO
 # ======================================================================
-- name: Bloco de Configuracao de Energia (Evitar Timeout)
+- name: Ajustar configuracoes de energia para estabilidade da automacao
   block:
-    - name: Desativar suspensao (Sleep) quando conectado na tomada (AC)
+
+    - name: Desativar suspensao (Sleep) quando conectado na tomada
       ansible.windows.win_command: powercfg /change standby-timeout-ac 0
-      changed_when: false # Mantém o log limpo (verde), pois forçaremos isso sempre
-
-    - name: Desativar hibernacao quando conectado na tomada (AC)
-      ansible.windows.win_command: powercfg /change hibernate-timeout-ac 0
       changed_when: false
-      ignore_errors: yes # Ignora caso a máquina não suporte hibernação nativamente
 
-    - name: Desativar desligamento do disco rigido quando conectado (AC)
-      ansible.windows.win_command: powercfg /change disk-timeout-ac 0
+    - name: Garantir que o timeout da tela bloqueada esteja visivel
+      ansible.windows.win_command: powercfg -attributes SUB_VIDEO VIDEOCONLOCK -ATTRIB_HIDE
       changed_when: false
+
+    - name: Impedir que a tela desligue quando o Windows estiver bloqueado
+      ansible.windows.win_shell: |
+        powercfg -setacvalueindex scheme_current sub_video videoconlock 0
+        powercfg -setactive scheme_current
+      changed_when: false   
 
 # ======================================================================
 # 2. CONFIGURAÇÃO DE NOME DA MÁQUINA (Hostname)
